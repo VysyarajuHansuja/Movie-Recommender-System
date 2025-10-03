@@ -21,18 +21,34 @@ def local_css(file_name):
         st.error(f"'{file_name}' not found. Please ensure the CSS file is in the same directory.")
 
 def download_file_from_gdrive(file_id, destination):
-    """Downloads a file from a public Google Drive link."""
-    URL = f"https://docs.google.com/uc?export=download&id={file_id}"
+    """
+    Downloads a large file from a public Google Drive link, handling the virus scan warning page.
+    """
+    URL = "https://docs.google.com/uc?export=download"
     
     with st.spinner(f"Downloading required model file: {destination}... (this may take a minute)"):
-        response = requests.get(URL, stream=True)
-        response.raise_for_status()
+        session = requests.Session()
+        response = session.get(URL, params={'id': file_id}, stream=True)
         
+        # Get the confirmation token from the first response
+        token = None
+        for key, value in response.cookies.items():
+            if key.startswith('download_warning'):
+                token = value
+                break
+        
+        # If a token was found, make a second request with the confirmation
+        if token:
+            params = {'id': file_id, 'confirm': token}
+            response = session.get(URL, params=params, stream=True)
+        
+        # Now, save the content
         with open(destination, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
+            for chunk in response.iter_content(chunk_size=32768):
                 if chunk:
                     f.write(chunk)
     st.success(f"Downloaded {destination} successfully!")
+
 
 def fetch_poster(movie_id):
     """Fetches the movie poster URL from the TMDB API."""
@@ -74,7 +90,7 @@ local_css("style.css")
 MOVIE_LIST_PATH = 'movie_list.pkl'
 SIMILARITY_PATH = 'similarity.pkl'
 
-# ❗️ PASTE YOUR GOOGLE DRIVE FILE IDs HERE
+# Your Google Drive file IDs
 MOVIE_LIST_GDRIVE_ID = '1hUq9eOgjlgzgSK1jiY_Sq66qwuqGfadI' 
 SIMILARITY_GDRIVE_ID = '1p0OeGB63QVtjA51VFbvDMT-2eahmB_gl'
 
@@ -91,8 +107,8 @@ try:
     movie_list = pickle.load(open(MOVIE_LIST_PATH, 'rb'))
     similarity = pickle.load(open(SIMILARITY_PATH, 'rb'))
     movies = pd.DataFrame(movie_list)
-except FileNotFoundError:
-    st.error("Model files not found. Please ensure the Google Drive IDs are correct and the files are accessible.")
+except (FileNotFoundError, pickle.UnpicklingError) as e:
+    st.error(f"Failed to load model files: {e}. Please ensure the Google Drive IDs are correct, the files are shared correctly ('Anyone with the link'), and they are not corrupted.")
     st.stop()
 
 # --- STREAMLIT UI ---
@@ -117,6 +133,9 @@ if st.button('Recommend'):
                     st.markdown(f"**{names[i]}**")
         else:
             st.warning("Could not find recommendations for the selected movie.")
+
+
+
 
 
 
