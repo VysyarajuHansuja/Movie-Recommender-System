@@ -1,0 +1,49 @@
+h1 {
+    font-size: 3rem;
+    color: #4CAF50; 
+}
+/*  Style the buttons  */
+.stButton>button {
+    border: 2px solid #4CAF50;
+    color: #4CAF50;
+    background-color: #FFFFFF;
+    border-radius: 20px;
+    padding: 10px 24px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.stButton>button:hover {
+    border-color: #FFFFFF;
+    color: #FFFFFF;
+    background-color: #4CAF50;
+    transform: scale(1.05); /* Slightly enlarge button on hover */
+}
+
+/* Center align the images in columns */
+.stImage > img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 10px; /* Rounded corners for posters */
+}
+
+
+/* --- Tablet Styles --- */
+/* This applies only when the screen is 768px wide or less */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2.2rem;
+    }
+}
+/* --- Mobile Styles --- */
+/* This applies only when the screen is 480px wide or less */
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+    /* Make buttons take the full width of the screen */
+    .stButton>button {
+        width: 100%;
+    }
+}
