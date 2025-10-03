@@ -21,10 +21,6 @@ def local_css(file_name):
     except FileNotFoundError:
         pass
 
-import gdown
-import os
-import streamlit as st
-import pickle
 
 def download_file_from_gdrive(file_id, destination):
     """Download a file from Google Drive and verify it's not HTML."""
@@ -135,4 +131,7 @@ if st.button('Recommend'):
                     st.markdown(f"**{names[i]}**")
         else:
             st.warning("Could not find recommendations for the selected movie.")
+
+
+
 
