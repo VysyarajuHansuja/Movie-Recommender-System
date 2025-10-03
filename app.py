@@ -50,9 +50,10 @@ def download_file_from_gdrive(file_id, destination):
 
 def fetch_poster(movie_id):
     """Fetches the movie poster URL from the TMDB API."""
+    
+    api_key = st.secrets['tmdb_api_key']
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}&language=en-US"
     try:
-        api_key = st.secrets['tmdb_api_key']
-        url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}&language=en-US"
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
@@ -134,3 +135,4 @@ if st.button('Recommend'):
                     st.markdown(f"**{names[i]}**")
         else:
             st.warning("Could not find recommendations for the selected movie.")
+
