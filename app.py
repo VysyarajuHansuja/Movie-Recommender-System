@@ -21,6 +21,11 @@ def local_css(file_name):
     except FileNotFoundError:
         pass
 
+import gdown
+import os
+import streamlit as st
+import pickle
+
 def download_file_from_gdrive(file_id, destination):
     """Download a file from Google Drive and verify it's not HTML."""
     url = f"https://drive.google.com/uc?id={file_id}"
@@ -41,6 +46,8 @@ def download_file_from_gdrive(file_id, destination):
     except Exception as e:
         st.error(f"File validation failed for {destination}: {e}")
         st.stop()
+
+
 def fetch_poster(movie_id):
     """Fetches the movie poster URL from the TMDB API."""
     try:
@@ -54,7 +61,7 @@ def fetch_poster(movie_id):
             return "https://image.tmdb.org/t/p/w500/" + poster_path
         else:
             return "https://via.placeholder.com/500x750.png?text=No+Poster"
-    # This is the corrected line, compatible with older Streamlit versions
+    
     except (requests.exceptions.RequestException, KeyError):
         return "https://via.placeholder.com/500x750.png?text=API+Error"
 
@@ -80,8 +87,8 @@ local_css("style.css")
 # --- DATA LOADING AND DOWNLOADING ---
 MOVIE_LIST_PATH = 'movie_list.pkl'
 SIMILARITY_PATH = 'similarity.pkl'
-MOVIE_LIST_GDRIVE_ID = '1hUq9eOgjlgzgSK1jiY_Sq66qwuqGfadI' 
-SIMILARITY_GDRIVE_ID = '1kX8VdZlvWFN9pG343S2bsFMTfHER25NP'
+MOVIE_LIST_GDRIVE_ID = "1hUq9eOgjlgzgSK1jiY_Sq66qwuqGfadI" 
+SIMILARITY_GDRIVE_ID = "1kX8VdZlvWFN9pG343S2bsFMTfHER25NP"
 
 if not os.path.exists(MOVIE_LIST_PATH):
     download_file_from_gdrive(MOVIE_LIST_GDRIVE_ID, MOVIE_LIST_PATH)
@@ -127,9 +134,3 @@ if st.button('Recommend'):
                     st.markdown(f"**{names[i]}**")
         else:
             st.warning("Could not find recommendations for the selected movie.")
-
-
-
-
-
-
