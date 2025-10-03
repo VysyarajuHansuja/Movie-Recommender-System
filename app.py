@@ -72,7 +72,7 @@ local_css("style.css")
 MOVIE_LIST_PATH = 'movie_list.pkl'
 SIMILARITY_PATH = 'similarity.pkl'
 MOVIE_LIST_GDRIVE_ID = '1hUq9eOgjlgzgSK1jiY_Sq66qwuqGfadI' 
-SIMILARITY_GDRIVE_ID = '1p0OeGB63QVtjA51VFbvDMT-2eahmB_gl'
+SIMILARITY_GDRIVE_ID = '1kX8VdZlvWFN9pG343S2bsFMTfHER25NP'
 
 if not os.path.exists(MOVIE_LIST_PATH):
     download_file_from_gdrive(MOVIE_LIST_GDRIVE_ID, MOVIE_LIST_PATH)
@@ -118,6 +118,7 @@ if st.button('Recommend'):
                     st.markdown(f"**{names[i]}**")
         else:
             st.warning("Could not find recommendations for the selected movie.")
+
 
 
 
