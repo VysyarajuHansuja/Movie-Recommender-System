@@ -79,14 +79,22 @@ if not os.path.exists(MOVIE_LIST_PATH):
 if not os.path.exists(SIMILARITY_PATH):
     download_file_from_gdrive(SIMILARITY_GDRIVE_ID, SIMILARITY_PATH)
 
+# Load the data files with improved error handling
 try:
-    with open(MOVIE_LIST_PATH, 'rb') as f1, open(SIMILARITY_PATH, 'rb') as f2:
+    with open(MOVIE_LIST_PATH, 'rb') as f1:
         movie_list = pickle.load(f1)
-        similarity = pickle.load(f2)
     movies = pd.DataFrame(movie_list)
 except (pickle.UnpicklingError, FileNotFoundError) as e:
-    st.error(f"Failed to load model files: {e}. Please ensure the Google Drive IDs are correct and files are shared correctly.")
+    st.error(f"Failed to load '{MOVIE_LIST_PATH}': {e}. Please ensure the Google Drive ID is correct and the file is shared as 'Anyone with the link'.")
     st.stop()
+
+try:
+    with open(SIMILARITY_PATH, 'rb') as f2:
+        similarity = pickle.load(f2)
+except (pickle.UnpicklingError, FileNotFoundError) as e:
+    st.error(f"Failed to load '{SIMILARITY_PATH}': {e}. Please ensure the Google Drive ID is correct and the file is shared as 'Anyone with the link'.")
+    st.stop()
+
 
 # --- STREAMLIT UI ---
 st.title("🎬 Cinematch Movie Recommender")
@@ -110,6 +118,7 @@ if st.button('Recommend'):
                     st.markdown(f"**{names[i]}**")
         else:
             st.warning("Could not find recommendations for the selected movie.")
+
 
 
 
