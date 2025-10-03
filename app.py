@@ -22,16 +22,25 @@ def local_css(file_name):
         pass
 
 def download_file_from_gdrive(file_id, destination):
-    """Downloads a file from a public Google Drive link using gdown."""
-    url = f'https://drive.google.com/uc?id={file_id}'
-    with st.spinner(f"Downloading required model file: {destination}... (this may take a minute)"):
-        try:
-            gdown.download(url, destination, quiet=False)
-            st.success(f"Downloaded {destination} successfully!")
-        except Exception as e:
-            st.error(f"Failed to download {destination}. Please ensure the Google Drive link is public ('Anyone with the link'). Error: {e}")
-            st.stop()
+    """Download a file from Google Drive and verify it's not HTML."""
+    url = f"https://drive.google.com/uc?id={file_id}"
 
+    try:
+        with st.spinner(f"Downloading {destination}..."):
+            gdown.download(url, destination, quiet=False, fuzzy=True)
+    except Exception as e:
+        st.error(f"Download failed for {destination}. Error: {e}")
+        st.stop()
+
+    # Verify it's really a pickle, not HTML
+    try:
+        with open(destination, "rb") as f:
+            first_bytes = f.read(4)
+        if first_bytes.startswith(b"<"):
+            raise ValueError("Downloaded file looks like HTML, not a pickle.")
+    except Exception as e:
+        st.error(f"File validation failed for {destination}: {e}")
+        st.stop()
 def fetch_poster(movie_id):
     """Fetches the movie poster URL from the TMDB API."""
     try:
@@ -118,6 +127,7 @@ if st.button('Recommend'):
                     st.markdown(f"**{names[i]}**")
         else:
             st.warning("Could not find recommendations for the selected movie.")
+
 
 
 
