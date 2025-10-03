@@ -3,8 +3,9 @@ import pickle
 import pandas as pd
 import requests
 import os
+import gdown
 
-# --- PAGE CONFIGURATION (must be the first Streamlit command) ---
+# --- PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="Cinematch",
     page_icon="🎬",
@@ -18,37 +19,18 @@ def local_css(file_name):
         with open(file_name) as f:
             st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     except FileNotFoundError:
-        st.error(f"'{file_name}' not found. Please ensure the CSS file is in the same directory.")
+        pass
 
 def download_file_from_gdrive(file_id, destination):
-    """
-    Downloads a large file from a public Google Drive link, handling the virus scan warning page.
-    """
-    URL = "https://docs.google.com/uc?export=download"
-    
+    """Downloads a file from a public Google Drive link using gdown."""
+    url = f'https://drive.google.com/uc?id={file_id}'
     with st.spinner(f"Downloading required model file: {destination}... (this may take a minute)"):
-        session = requests.Session()
-        response = session.get(URL, params={'id': file_id}, stream=True)
-        
-        # Get the confirmation token from the first response
-        token = None
-        for key, value in response.cookies.items():
-            if key.startswith('download_warning'):
-                token = value
-                break
-        
-        # If a token was found, make a second request with the confirmation
-        if token:
-            params = {'id': file_id, 'confirm': token}
-            response = session.get(URL, params=params, stream=True)
-        
-        # Now, save the content
-        with open(destination, "wb") as f:
-            for chunk in response.iter_content(chunk_size=32768):
-                if chunk:
-                    f.write(chunk)
-    st.success(f"Downloaded {destination} successfully!")
-
+        try:
+            gdown.download(url, destination, quiet=False)
+            st.success(f"Downloaded {destination} successfully!")
+        except Exception as e:
+            st.error(f"Failed to download {destination}. Please ensure the Google Drive link is public ('Anyone with the link'). Error: {e}")
+            st.stop()
 
 def fetch_poster(movie_id):
     """Fetches the movie poster URL from the TMDB API."""
@@ -63,6 +45,7 @@ def fetch_poster(movie_id):
             return "https://image.tmdb.org/t/p/w500/" + poster_path
         else:
             return "https://via.placeholder.com/500x750.png?text=No+Poster"
+    # This is the corrected line, compatible with older Streamlit versions
     except (requests.exceptions.RequestException, KeyError):
         return "https://via.placeholder.com/500x750.png?text=API+Error"
 
@@ -86,29 +69,23 @@ def recommend(movie_title, movies_df, similarity_matrix):
 local_css("style.css")
 
 # --- DATA LOADING AND DOWNLOADING ---
-# Define file paths and Google Drive IDs
 MOVIE_LIST_PATH = 'movie_list.pkl'
 SIMILARITY_PATH = 'similarity.pkl'
-
-# Your Google Drive file IDs
 MOVIE_LIST_GDRIVE_ID = '1hUq9eOgjlgzgSK1jiY_Sq66qwuqGfadI' 
 SIMILARITY_GDRIVE_ID = '1p0OeGB63QVtjA51VFbvDMT-2eahmB_gl'
 
-# Check for movie_list.pkl and download if it doesn't exist
 if not os.path.exists(MOVIE_LIST_PATH):
     download_file_from_gdrive(MOVIE_LIST_GDRIVE_ID, MOVIE_LIST_PATH)
-
-# Check for similarity.pkl and download if it doesn't exist
 if not os.path.exists(SIMILARITY_PATH):
     download_file_from_gdrive(SIMILARITY_GDRIVE_ID, SIMILARITY_PATH)
 
-# Load the data files
 try:
-    movie_list = pickle.load(open(MOVIE_LIST_PATH, 'rb'))
-    similarity = pickle.load(open(SIMILARITY_PATH, 'rb'))
+    with open(MOVIE_LIST_PATH, 'rb') as f1, open(SIMILARITY_PATH, 'rb') as f2:
+        movie_list = pickle.load(f1)
+        similarity = pickle.load(f2)
     movies = pd.DataFrame(movie_list)
-except (FileNotFoundError, pickle.UnpicklingError) as e:
-    st.error(f"Failed to load model files: {e}. Please ensure the Google Drive IDs are correct, the files are shared correctly ('Anyone with the link'), and they are not corrupted.")
+except (pickle.UnpicklingError, FileNotFoundError) as e:
+    st.error(f"Failed to load model files: {e}. Please ensure the Google Drive IDs are correct and files are shared correctly.")
     st.stop()
 
 # --- STREAMLIT UI ---
@@ -133,10 +110,4 @@ if st.button('Recommend'):
                     st.markdown(f"**{names[i]}**")
         else:
             st.warning("Could not find recommendations for the selected movie.")
-
-
-
-
-
-
 
